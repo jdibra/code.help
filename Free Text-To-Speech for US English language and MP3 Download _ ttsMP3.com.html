@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<!-- saved from url=(0019)https://ttsmp3.com/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Easily convert your written text into natural sounding voice in up to 50 different languages and/or accents. Download as MP3 or listen to it.">
+	<title>Free Text-To-Speech for US English language and MP3 Download | ttsMP3.com</title>
+
+
+	<script src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/f.txt"></script><script src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/osd.js.download"></script><script src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/f(1).txt"></script><script src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/f(2).txt" id="google_shimpl"></script><script type="text/javascript" async="" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/analytics.js.download"></script><script type="text/javascript">
+		function support_mp3() {
+			var a = document.createElement('audio');
+			return !!(a.canPlayType && a.canPlayType('audio/mpeg;').replace(/no/, ''));	
+		}
+		var soundarray = 0;
+		
+		function checkfors3(s3file, silent) {
+			var s3checkreq = new XMLHttpRequest();
+			s3checkreq.open("POST", 'https://ttsmp3.com/inc/checks3.php?id=' + s3file, true);
+			s3checkreq.send( null );
+			s3checkreq.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					s3checker = this.responseText;
+					if (s3checker == 0) {
+						setTimeout(function(){
+							checkfors3(s3file, silent);
+						}, 2000);
+						
+					}
+					else {
+						var s3filepath = "https://s3.ca-central-1.amazonaws.com/ttsmp3files/" + s3file + ".mp3";
+						
+						var myaudio = new Audio(s3filepath);
+						document.getElementById("s3loader").style.display = "none"; 
+						myaudio.addEventListener("playing", function() 
+						 {
+							document.getElementById("vorlesenbutton").disabled = false; 
+							document.getElementById("vorlesenbutton").value = "Reading...";
+						 });
+						myaudio.addEventListener("ended", function() 
+						 {
+							document.getElementById("vorlesenbutton").disabled = false; 
+							document.getElementById("vorlesenbutton").value = "Read";
+						 });
+						myaudio.addEventListener('error', function failed(e) {
+							switch (e.target.error.code) {
+							 case e.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+							   alert('Your audio file was created but is corrupt. Please check your message for invalid characters.');
+							   enablebuttons();
+							   break;
+						   }
+						 }, true);
+						if (silent == 0) {
+							myaudio.play();
+						}
+						else {
+							godownload(s3file, "s3");
+							enablebuttons();
+						}
+					}
+				}
+			}			
+
+		}
+
+		
+
+		function escapeRegExp(str) {
+			return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+		}
+		function replaceAll(str, find, replace) {
+			return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
+		}
+		function enablebuttons() {
+			document.getElementById("vorlesenbutton").disabled = false;
+			document.getElementById("vorlesenbutton").value = "Read";
+		}
+		function playsound(silent) {
+			if (!support_mp3()) {
+				alert("Sorry, your current browser does not support playing MP3 files, please switch to a different browser, i.e. Chrome, Firefox. Thank you");
+			}
+			else {
+				document.getElementById("vorlesenbutton").disabled = true; 
+				document.getElementById("vorlesenbutton").value = "Creating...";
+				var voicetext = document.getElementById('voicetext').value;
+				if (voicetext == "") { alert("Please input text."); document.getElementById("vorlesenbutton").disabled = false; }
+				var e = document.getElementById("sprachwahl");
+				var lang = e.options[e.selectedIndex].value;
+				var httpreq = new XMLHttpRequest();
+				voicetext = encodeURIComponent(replaceAll(voicetext, "&"," and "));
+				var params = "msg="+voicetext+"&lang="+lang+"&source=ttsmp3";
+				httpreq.open("POST", 'https://ttsmp3.com/makemp3_new.php', true);
+				httpreq.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+				httpreq.overrideMimeType("application/json");
+				httpreq.onreadystatechange = function (e) {
+					if (this.readyState == 4 && this.status == 200) {
+						try {
+							soundarray = JSON.parse(this.responseText);
+							if (soundarray["Error"] == 0) {
+								if (soundarray["tasktype"] != "s3") {
+									console.log("direct processing");
+									var myaudio = new Audio(soundarray["URL"]);
+									myaudio.addEventListener("playing", function() 
+									 {
+										document.getElementById("vorlesenbutton").disabled = false; 
+										document.getElementById("vorlesenbutton").value = "Reading...";
+									 });
+									myaudio.addEventListener("ended", function() 
+									 {
+										document.getElementById("vorlesenbutton").disabled = false; 
+										document.getElementById("vorlesenbutton").value = "Read";
+									 });
+									myaudio.addEventListener('error', function failed(e) {
+										switch (e.target.error.code) {
+										 case e.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+										   alert('Your audio file was created but is corrupt. Please check your message for invalid characters.');
+										   enablebuttons();
+										   break;
+									   }
+									 }, true);
+									if (silent == 0) {
+										myaudio.play();
+									}
+									else {
+										godownload(soundarray["MP3"], "direct");
+										enablebuttons();
+									}
+								}
+								else {
+									console.log("task processing");
+									document.getElementById("s3loader").style.display = "block"; 
+									checkfors3(soundarray["s3task"], silent);
+									
+								}
+							}
+							else {
+								alert(soundarray['Error']);
+								if (soundarray['Error'] == "Usage Limit exceeded") {
+									var d = Math.random();
+										if (d < 1) {
+											window.location = "https://ttsmp3.com/register?click=jsredirect";
+										//	window.open("https://ttsmp3.com/register?click=jsredirect", "_blank");
+										}
+										else {
+											$("#sprachwahl").fadeOut("slow");
+											$("#vorlesenbutton").fadeOut("slow");
+											$("#downloadenbutton").fadeOut("slow");
+											$("#limitannounce").fadeIn("slow");
+										}
+										
+								}
+								enablebuttons();
+							}
+						}
+						catch (err) {
+							alert("Something went wrong... please contact support@ttsmp3.com for support");
+							enablebuttons();
+						}
+					}
+				}
+				httpreq.send(params);				
+			}
+		}
+		function godownload(playthis, location) {
+			if (!support_mp3()) {
+				alert("Sorry, your current browser does not support playing MP3 files, please switch to a different browser, i.e. Chrome, Firefox. Thank you :-)");
+			}
+			else {
+				// alert(playthis);
+				playthis = playthis || "";
+				var voicetext = document.getElementById('voicetext').value;
+				if (voicetext == "") { alert("Please input text."); die; }
+				var e = document.getElementById("sprachwahl");
+				var lang = e.options[e.selectedIndex].value;
+				if (((soundarray != 0) && (soundarray["Text"] == voicetext)) || (playthis != "")) {
+
+					if (playthis != "") { soundarray["MP3"] = playthis; }
+					if (typeof location === "undefined") { location = soundarray["tasktype"]; }
+					var httpreq = new XMLHttpRequest();
+					httpreq.open("GET", 'https://ttsmp3.com/dlmp3.php?mp3='+soundarray["MP3"] + "&location=" + location, true);
+					httpreq.responseType = "blob";
+					httpreq.onreadystatechange = function (e) {
+						if (this.readyState == 4 && this.status == 200) {
+							try {
+								var blob = new Blob([this.response], {type:'audio/mp3'});
+								var today = new Date();
+								var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+								var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+								saveAs(blob, "ttsMP3.com_VoiceText_"+date+"_"+time+".mp3");
+							}
+							catch (err) {
+								alert("Something went wrong... please contact support@ttsmp3.com for support");
+							}
+						}
+					}
+					httpreq.send();
+				}
+				else {
+					playsound(1);
+				}
+			}
+		}
+				
+		function dontsubmit() {
+			return false;
+		}
+
+	</script>
+
+<link rel="stylesheet" type="text/css" href="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/cookieconsent.min.css">
+<script src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/cookieconsent.min.js.download" data-cfasync="false"></script>
+<script>
+window.addEventListener('load', function(){
+  window.cookieconsent.initialise({
+   revokeBtn: "<div class='cc-revoke'></div>",
+   type: "opt-in",
+   position: "top",
+   static: true,
+   theme: "classic",
+   palette: {
+       popup: {
+           background: "#000",
+           text: "#fff"
+        },
+       button: {
+           background: "#fd0",
+           text: "#000"
+        }
+    },
+   content: {
+       link: "Сookie policy",
+       href: "https://ttsmp3.com/privacypolicy"
+    },
+    onInitialise: function(status) {
+      if(status == cookieconsent.status.allow) myScripts();
+    },
+    onStatusChange: function(status) {
+      if (this.hasConsented()) myScripts();
+    }
+  })
+});
+
+function myScripts() {
+
+
+
+
+	!function(f,b,e,v,n,t,s)
+	{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+	n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+	if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+	n.queue=[];t=b.createElement(e);t.async=!0;
+	t.src=v;s=b.getElementsByTagName(e)[0];
+	s.parentNode.insertBefore(t,s)}(window, document,'script',
+	'https://connect.facebook.net/en_US/fbevents.js');
+	fbq('init', '2655033931276642');
+	fbq('track', 'PageView');
+
+
+
+}
+
+</script>	
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async="" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/js"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  
+
+	gtag('js', new Date());
+
+	gtag('config', 'UA-28351091-23');
+
+ 
+</script>
+
+
+<script async="" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/f(3).txt"></script>
+
+
+<meta http-equiv="origin-trial" content="A88otRz1Fd3Nt567e2IYshC18LL3KGVXpVJW9oTCId4RYaygt23pbb4JqrbdIO/bwZPWEmRjBIRBu/bZbDR7Pg4AAABueyJvcmlnaW4iOiJodHRwczovL2ltYXNkay5nb29nbGVhcGlzLmNvbTo0NDMiLCJmZWF0dXJlIjoiVHJ1c3RUb2tlbnMiLCJleHBpcnkiOjE2MzQwODMxOTksImlzVGhpcmRQYXJ0eSI6dHJ1ZX0="><meta http-equiv="origin-trial" content="A0gCLbXCcL0R1Oc8tFPDs0G4Elz17w3zHp+Zst66+D17veE2o7fUcPsA114QtSTRqfVJLMeTSdeWOom0CcyCsgYAAAB7eyJvcmlnaW4iOiJodHRwczovL2RvdWJsZWNsaWNrLm5ldDo0NDMiLCJmZWF0dXJlIjoiVHJ1c3RUb2tlbnMiLCJleHBpcnkiOjE2MzQwODMxOTksImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="A9RQ+LxFazAousxUwSCzaihJjHLO1UyjQp0teZKHl7WdbVjPDfHSKMd6D/ZI5MTjqClFycbl70EFd7cBJWXqKQEAAACBeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXRhZ3NlcnZpY2VzLmNvbTo0NDMiLCJmZWF0dXJlIjoiVHJ1c3RUb2tlbnMiLCJleHBpcnkiOjE2MzQwODMxOTksImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="A6WKeWsdn1Ct+ZPqS9NCxxaiBoQ7wdTkK2/gE69Yu0gfBKJfo1gOvgkGmf5/xaIajT/RUb9AbnF1FsSZ47cCcQcAAACBeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXN5bmRpY2F0aW9uLmNvbTo0NDMiLCJmZWF0dXJlIjoiVHJ1c3RUb2tlbnMiLCJleHBpcnkiOjE2MzQwODMxOTksImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="A04ZCu7yjrHgwQJK5ISHhH1DSg0qqowEay3n70KO6wV3D2Mj+OX3Kw20aSMitzgdG1xfrN7sOJV/dZIk+RvCzA4AAAB2eyJvcmlnaW4iOiJodHRwczovL2dvb2dsZS5jb206NDQzIiwiZmVhdHVyZSI6IlRydXN0VG9rZW5zIiwiZXhwaXJ5IjoxNjM0MDgzMTk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><meta http-equiv="origin-trial" content="A2YAd4xOntTGygIDjApOTtXOgVI3IWsd5OnOGq3RbRkIQwyqYWNl1JGRAcvtm6VOHDj4n07T/J19VqLuJn3MmQ8AAACWeyJvcmlnaW4iOiJodHRwczovL2RvdWJsZWNsaWNrLm5ldDo0NDMiLCJmZWF0dXJlIjoiQ29udmVyc2lvbk1lYXN1cmVtZW50IiwiZXhwaXJ5IjoxNjMxNjYzOTk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlLCJ1c2FnZSI6InN1YnNldCJ9"><meta http-equiv="origin-trial" content="A2c5Ux+hivdkLh/KbZUGr6f7SCR0mZrBVfPJ+/OuDVHNwiYv+Lo83b9z5qL8sod78bQl0pSLtbvRWURo+xRl7AIAAACceyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXN5bmRpY2F0aW9uLmNvbTo0NDMiLCJmZWF0dXJlIjoiQ29udmVyc2lvbk1lYXN1cmVtZW50IiwiZXhwaXJ5IjoxNjMxNjYzOTk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlLCJ1c2FnZSI6InN1YnNldCJ9"><meta http-equiv="origin-trial" content="AzNJ4sd3tVurolpdvWYZ4cmP9Po7RJhEHSqmC3pgxW9fFVZvchhtcMUgHAs97npxMD1jhXHO8s6q6Wy1MMLxKgEAAACceyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXRhZ3NlcnZpY2VzLmNvbTo0NDMiLCJmZWF0dXJlIjoiQ29udmVyc2lvbk1lYXN1cmVtZW50IiwiZXhwaXJ5IjoxNjMxNjYzOTk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlLCJ1c2FnZSI6InN1YnNldCJ9"><meta http-equiv="origin-trial" content="AwfG8hAcHnPa/kJ1Co0EvG/K0F9l1s2JZGiDLt2mhC3QI5Fh4qmsmSwrWObZFbRC9ieDaSLU6lHRxhGUF/i9sgoAAACBeyJvcmlnaW4iOiJodHRwczovL2RvdWJsZWNsaWNrLm5ldDo0NDMiLCJmZWF0dXJlIjoiSW50ZXJlc3RDb2hvcnRBUEkiLCJleHBpcnkiOjE2MjYyMjA3OTksImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="AwQ7dCmHkvR6FuOFxAuNnktYSQrGbL4dF+eBkrwNLALc69Wr//PnO1yzns3pjUoCaYbKHtVcnng2hU+8OUm0PAYAAACHeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXN5bmRpY2F0aW9uLmNvbTo0NDMiLCJmZWF0dXJlIjoiSW50ZXJlc3RDb2hvcnRBUEkiLCJleHBpcnkiOjE2MjYyMjA3OTksImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="AysVDPGQTLD/Scn78x4mLwB1tMfje5jwUpAAzGRpWsr1NzoN7MTFhT3ClmImi2svDZA7V6nWGIV8YTPsSRTe0wYAAACHeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXRhZ3NlcnZpY2VzLmNvbTo0NDMiLCJmZWF0dXJlIjoiSW50ZXJlc3RDb2hvcnRBUEkiLCJleHBpcnkiOjE2MjYyMjA3OTksImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><link rel="preload" href="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/f(4).txt" as="script"><script type="text/javascript" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/f(4).txt"></script><link rel="preload" href="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/f(5).txt" as="script"><script type="text/javascript" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/f(5).txt"></script><style></style><link rel="preload" href="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/f(4).txt" as="script"><script type="text/javascript" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/f(4).txt"></script><link rel="preload" href="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/f(5).txt" as="script"><script type="text/javascript" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/f(5).txt"></script></head>
+<body aria-hidden="false"><div class="cc-revoke" style="display: none;"></div><div class="cc-grower" style="max-height: 72px;"><div role="dialog" aria-live="polite" aria-label="cookieconsent" aria-describedby="cookieconsent:desc" class="cc-window cc-banner cc-type-opt-in cc-theme-classic cc-static cc-top cc-color-override--1518487596 " style=""><!--googleoff: all--><span id="cookieconsent:desc" class="cc-message">This website uses cookies to ensure you get the best experience on our website. <a aria-label="learn more about cookies" role="button" tabindex="0" class="cc-link" href="https://ttsmp3.com/privacypolicy" rel="noopener noreferrer nofollow" target="_blank">Сookie policy</a></span><div class="cc-compliance cc-highlight"><a aria-label="deny cookies" role="button" tabindex="0" class="cc-btn cc-deny">Decline</a><a aria-label="allow cookies" role="button" tabindex="0" class="cc-btn cc-allow">Allow cookies</a></div><!--googleon: all--></div></div>
+	<div id="header">
+		
+			<a href="https://ttsmp3.com/"><img alt="ttsmp3.com LOGO" width="300" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/logo.png"></a>
+		
+
+	</div>
+	<div id="body" style="height: auto !important; min-height: 0px !important;">
+	<h1>Free Text-To-Speech and Text-to-MP3 for US English</h1>
+	<p>
+
+		<!-- TTSMP3 Rect -->
+		<ins class="adsbygoogle" style="display: inline-block; width: 1349px; height: 400px;" data-ad-client="ca-pub-2908655618540976" data-ad-slot="1961901246" data-adsbygoogle-status="done" data-ad-status="unfilled"><ins id="aswift_0_expand" style="display:inline-table;border:none;height:400px;margin:0;padding:0;position:relative;visibility:visible;width:1349px;background-color:transparent;" tabindex="0" title="Advertisement" aria-label="Advertisement"><ins id="aswift_0_anchor" style="display:block;border:none;height:400px;margin:0;padding:0;position:relative;visibility:visible;width:1349px;background-color:transparent;"><iframe id="aswift_0" name="aswift_0" style="left:0;position:absolute;top:0;border:0;width:1349px;height:400px;" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation" width="1349" height="400" frameborder="0" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/ads.html" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true" allow="attribution-reporting" data-google-container-id="a!1" data-google-query-id="CPXK5ISM3fICFRMbcgodUsoJjg" data-load-complete="true"></iframe></ins></ins></ins>
+		<script>
+		(adsbygoogle = window.adsbygoogle || []).push({});
+		</script>
+	</p>
+	
+	
+	<div style="text-align:left;" id="introtext">
+
+	
+	<p>Easily convert your <strong>US English</strong> text into professional speech for free. Perfect for e-learning, presentations, YouTube videos and increasing the accessibility of your website. Our voices pronounce your texts in their own language using a specific accent. Plus, these texts can be downloaded as MP3. In some languages, multiple speakers are available.
+			</p>
+
+	
+
+	</div>
+		<div id="featured">
+			
+			<form onsubmit="return dontsubmit();">
+			<textarea onchange="enablebuttons();" maxlength="3000" id="voicetext" placeholder="your text here"></textarea>
+			<select id="sprachwahl">
+			<option value="Zeina">Arabic / Zeina</option><option value="Russell">Australian English / Russell</option><option value="Nicole">Australian English / Nicole</option><option value="Camila">Brazilian Portuguese / Camila</option><option value="Ricardo">Brazilian Portuguese / Ricardo</option><option value="Vitoria">Brazilian Portuguese / Vitória</option><option value="Emma">British English / Emma</option><option value="Amy">British English / Amy</option><option value="Brian">British English / Brian</option><option value="Chantal">Canadian French / Chantal</option><option value="Lucia">Castilian Spanish / Lucia</option><option value="Enrique">Castilian Spanish / Enrique</option><option value="Conchita">Castilian Spanish / Conchita</option><option value="Zhiyu">Chinese Mandarin / Zhiyu</option><option value="Mads">Danish / Mads</option><option value="Naja">Danish / Naja</option><option value="Ruben">Dutch / Ruben</option><option value="Lotte">Dutch / Lotte</option><option value="Celine">French / Céline</option><option value="Lea">French / Léa</option><option value="Mathieu">French / Mathieu</option><option value="Marlene">German / Marlene</option><option value="Vicki">German / Vicki</option><option value="Hans">German / Hans</option><option value="Dora">Icelandic / Dóra</option><option value="Karl">Icelandic / Karl</option><option value="Raveena">Indian English / Raveena</option><option value="Aditi">Indian English / Aditi</option><option value="Giorgio">Italian / Giorgio</option><option value="Carla">Italian / Carla</option><option value="Bianca">Italian / Bianca</option><option value="Takumi">Japanese / Takumi</option><option value="Mizuki">Japanese / Mizuki</option><option value="Seoyeon">Korean / Seoyeon</option><option value="Mia">Mexican Spanish / Mia</option><option value="Aria">New Zealand English / Aria</option><option value="Liv">Norwegian / Liv</option><option value="Jan">Polish / Jan</option><option value="Ewa">Polish / Ewa</option><option value="Maja">Polish / Maja</option><option value="Jacek">Polish / Jacek</option><option value="Cristiano">Portuguese / Cristiano</option><option value="Ines">Portuguese / Inês</option><option value="Carmen">Romanian / Carmen</option><option value="Maxim">Russian / Maxim</option><option value="Tatyana">Russian / Tatyana</option><option value="Astrid">Swedish / Astrid</option><option value="Filiz">Turkish / Filiz</option><option value="Kendra" selected="">US English / Kendra</option><option value="Justin">US English / Justin</option><option value="Salli">US English / Salli</option><option value="Kimberly">US English / Kimberly</option><option value="Joanna">US English / Joanna</option><option value="Joey">US English / Joey</option><option value="Ivy">US English / Ivy</option><option value="Matthew">US English / Matthew</option><option value="Penelope">US Spanish / Penélope</option><option value="Miguel">US Spanish / Miguel</option><option value="Lupe">US Spanish / Lupe</option><option value="Gwyneth">Welsh / Gwyneth</option><option value="Geraint">Welsh English / Geraint</option>			</select>
+			<input onclick="playsound(0);" id="vorlesenbutton" class="subbuttons" type="submit" value="Read">
+			<input onclick="godownload();" id="downloadenbutton" class="subbuttons" type="submit" value="Download as MP3">
+			<div style="clear:both;"></div>
+			<p id="limitannounce"><!--<a target="_blank" href="https://ttsmp3.com/register?click=banner"><img style='width: 100% !important;' src='/images/BannerAdNew.jpg'/></a>--></p>
+			</form>
+			
+		</div>
+		
+		<div style="border: 2px solid #ccc; width: 350px; padding: 10px; display: none;" id="s3loader">
+		<p style="font-weight: bold;">Woah, that is quite some text... </p><p>Please give us a moment to process your request...</p><img style="border: none;" width="200" data-src="images/loader.gif">
+		</div>
+		<p>Input limit: 3,000 characters / Don't forget to turn on your speakers :-)</p><p> Hint: If you finish a sentence, leave a space after the dot before the next one starts for better pronunciation.</p>
+		<p>
+
+			<!-- TTSMP3 Rect -->
+			<ins class="adsbygoogle" style="display: inline-block; width: 1349px; height: 280px;" data-ad-client="ca-pub-2908655618540976" data-ad-slot="1961901246" data-adsbygoogle-status="done" data-ad-status="filled"><ins id="aswift_1_expand" style="display:inline-table;border:none;height:280px;margin:0;padding:0;position:relative;visibility:visible;width:1349px;background-color:transparent;" tabindex="0" title="Advertisement" aria-label="Advertisement"><ins id="aswift_1_anchor" style="display:block;border:none;height:280px;margin:0;padding:0;position:relative;visibility:visible;width:1349px;background-color:transparent;"><iframe id="aswift_1" name="aswift_1" style="left:0;position:absolute;top:0;border:0;width:1349px;height:280px;" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation" width="1349" height="280" frameborder="0" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/ads(1).html" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true" allow="attribution-reporting" data-google-container-id="a!2" data-google-query-id="CNOX54SM3fICFRMQcgod174Hvg" data-load-complete="true"></iframe></ins></ins></ins>
+		<script>
+		(adsbygoogle = window.adsbygoogle || []).push({});
+		</script>
+		</p>
+		
+				<br>
+		<div class="google-auto-placed" style="width: 100%; height: auto; clear: both; text-align: center;"><ins data-ad-format="auto" class="adsbygoogle adsbygoogle-noablate" data-ad-client="ca-pub-2908655618540976" data-adsbygoogle-status="done" style="display: block; margin: 5px auto 10px; background-color: transparent; height: 90px;" data-ad-status="filled"><ins id="aswift_4_expand" style="display:inline-table;border:none;height:90px;margin:0;padding:0;position:relative;visibility:visible;width:1200px;background-color:transparent;" tabindex="0" title="Advertisement" aria-label="Advertisement"><ins id="aswift_4_anchor" style="display: block; border: none; height: 90px; margin: 0px; padding: 0px; position: relative; visibility: visible; width: 1200px; background-color: transparent; overflow: visible;"><iframe id="aswift_4" name="aswift_4" style="left:0;position:absolute;top:0;border:0;width:1200px;height:90px;" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation" width="1200" height="90" frameborder="0" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/ads(2).html" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true" allow="attribution-reporting" data-google-container-id="a!5" data-google-query-id="CIyqvIWM3fICFR6apwodzFQKFw" data-load-complete="true"></iframe></ins></ins></ins></div><div style="text-align: justify; width: 70%; padding: 10px 30px 30px; border: 2px solid rgb(206, 206, 206); margin-top: 5px; height: auto !important;">
+<h3>Here are some features to use while generating speech:</h3>
+
+<h5>Add a break</h5>
+Mary had a little lamb &lt;break time="1s"/&gt; Whose fleece was white as snow.
+
+<h5>Emphasizing words</h5>
+I already told you I &lt;emphasis level="strong"&gt;really like &lt;/emphasis&gt; that person.
+
+<h5>Speed</h5>
+For dramatic purposes, you might wish to &lt;prosody rate="slow"&gt;slow down the speaking rate of your text.&lt;/prosody&gt;     <br>
+Or if you are in a hurry &lt;prosody rate="fast"&gt;your may want to speed it up a bit.&lt;/prosody&gt;    
+
+<h5>Pitch</h5>
+Do you like sythesized speech &lt;prosody pitch="high"&gt;with a pitch that is higher than normal?&lt;/prosody&gt;    <br>
+Or do you prefer your speech &lt;prosody pitch="-20%"&gt;with a somewhat lower pitch?&lt;/prosody&gt;
+
+<h5>Whisper</h5>
+&lt;amazon:effect name="whispered"&gt;If you make any noise, &lt;/amazon:effect&gt; she said, &lt;amazon:effect name="whispered"&gt;they will hear us.&lt;/amazon:effect&gt;
+
+<h5>Conversations</h5>
+It is possible to switch between speakers within the text. Just use the following format:<br>
+[speaker:Brian] Hello Emma<br>
+[speaker:Emma] Hey Brian<br>
+[speaker:Brian] How are you doing?<br>
+[speaker:Emma] I am fine. May i invite you to a cup of tea?<br>
+<p>Please note: Remove any diacritical signs from the speakers names when using this, Léa = Lea, Penélope = Penelope</p><div class="google-auto-placed ap_container" style="width: 100%; height: auto; clear: both; text-align: center;"><ins data-ad-format="auto" class="adsbygoogle adsbygoogle-noablate" data-ad-client="ca-pub-2908655618540976" data-adsbygoogle-status="done" style="display: block; margin: auto; background-color: transparent; height: 280px;" data-ad-status="filled"><ins id="aswift_3_expand" style="display:inline-table;border:none;height:280px;margin:0;padding:0;position:relative;visibility:visible;width:944px;background-color:transparent;" tabindex="0" title="Advertisement" aria-label="Advertisement"><ins id="aswift_3_anchor" style="display: block; border: none; height: 280px; margin: 0px; padding: 0px; position: relative; visibility: visible; width: 944px; background-color: transparent; overflow: visible;"><iframe id="aswift_3" name="aswift_3" style="left:0;position:absolute;top:0;border:0;width:944px;height:280px;" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation" width="944" height="280" frameborder="0" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/ads(3).html" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true" allow="attribution-reporting" data-google-container-id="a!4" data-google-query-id="CJiwtoWM3fICFcGfSwUdKQEFBg" data-load-complete="true"></iframe></ins></ins></ins></div>
+<br><br>
+<p></p><h5>Need more effects or customization? Please refer to the <a target="_blank" href="https://docs.aws.amazon.com/polly/latest/dg/supportedtags.html">Amazon SSML Tags for Amazon Polly</a></h5><p></p>
+</div>		<br>
+		
+		<div style="text-align: justify; width: 70%; padding: 30px; border: 2px solid #cecece; padding-top: 10px; margin-top: 5px;"><h3>Facts about the US English language:</h3><p></p><p>English was brought to Britain in the mid 5th to 7th centuries. If you were to ask those who don't speak English whether or not it's a hard language to learn, you'd likely get more than a few who insist that it is among the hardest.</p>
+
+<p>Though, it can be argued that English is easy since it has no gender, no word agreement, and no cases. Yet, it does have words such as through, threw, and thru, all sounds the same, but are spelled differently, and can't be used interchangeably.</p>
+
+<p>English also has polish, and Polish. One is used to make furniture shine, while the other is a language. Or take resume and resume, one is used when you're filling out job applications, and the other is used when you want to tell someone to carry on with what they're doing.</p>
+
+<p>As you can see above, the English language can be challenging, however, it's far from the most difficult language to learn. With a bit of study, and some practice, almost anyone can learn English. One of the best ways to learn the language is to find a friend who speaks English, and is willing to have conversations with you. This will help you immerse yourself in the language and pick up on the nuances, and speech patterns of English. With a bit of practice, you'll soon be speaking English like it's your native language. </p><p></p></div><div class="google-auto-placed" style="width: 100%; height: auto; clear: both; text-align: center;"><ins data-ad-format="auto" class="adsbygoogle adsbygoogle-noablate" data-ad-client="ca-pub-2908655618540976" data-adsbygoogle-status="done" style="display: block; margin: 15px auto 10px; background-color: transparent; height: 0px;" data-ad-status="unfilled"><ins id="aswift_5_expand" style="display: inline-table; border: none; height: 0px; margin: 0px; padding: 0px; position: relative; visibility: visible; width: 1200px; background-color: transparent;" tabindex="0" title="Advertisement" aria-label="Advertisement"><ins id="aswift_5_anchor" style="display: block; border: none; height: 0px; margin: 0px; padding: 0px; position: relative; visibility: visible; width: 1200px; background-color: transparent; overflow: hidden; opacity: 0;"><iframe id="aswift_5" name="aswift_5" style="left: 0px; position: absolute; top: 0px; border: 0px; width: 1200px; height: 0px;" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation" width="1200" height="0" frameborder="0" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/ads(4).html" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true" allow="attribution-reporting" data-google-container-id="a!6" data-google-query-id="CNuNvYWM3fICFQrZYgodVhUOiw" data-load-complete="true"></iframe></ins></ins></ins></div><div class="google-auto-placed" style="width: 100%; height: auto; clear: both; text-align: center;"><ins data-ad-format="auto" class="adsbygoogle adsbygoogle-noablate" data-ad-client="ca-pub-2908655618540976" data-adsbygoogle-status="done" style="display: block; margin: 10px auto; background-color: transparent; height: 60px;" data-ad-status="filled"><ins id="aswift_6_expand" style="display:inline-table;border:none;height:60px;margin:0;padding:0;position:relative;visibility:visible;width:1200px;background-color:transparent;" tabindex="0" title="Advertisement" aria-label="Advertisement"><ins id="aswift_6_anchor" style="display: block; border: none; height: 60px; margin: 0px; padding: 0px; position: relative; visibility: visible; width: 1200px; background-color: transparent; overflow: visible;"><iframe id="aswift_6" name="aswift_6" style="left:0;position:absolute;top:0;border:0;width:1200px;height:60px;" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation" width="1200" height="60" frameborder="0" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/ads(5).html" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true" allow="attribution-reporting" data-google-container-id="a!7" data-google-query-id="CL-yvoWM3fICFSSEfwQdP74I7A" data-load-complete="true"></iframe></ins></ins></ins></div>
+						<div style="text-align: justify; width: 70%; padding: 30px; border: 2px solid #cecece; padding-top: 10px; margin-top: 15px;">
+		<h3>Supported voice languages: </h3>
+		
+		<a href="https://ttsmp3.com/text-to-speech/Arabic/"><div class="langbox">Arabic</div></a><a href="https://ttsmp3.com/text-to-speech/Australian%20English/"><div class="langbox">Australian English</div></a><a href="https://ttsmp3.com/text-to-speech/Brazilian%20Portuguese/"><div class="langbox">Brazilian Portuguese</div></a><a href="https://ttsmp3.com/text-to-speech/British%20English/"><div class="langbox">British English</div></a><a href="https://ttsmp3.com/text-to-speech/Canadian%20French/"><div class="langbox">Canadian French</div></a><a href="https://ttsmp3.com/text-to-speech/Castilian%20Spanish/"><div class="langbox">Castilian Spanish</div></a><a href="https://ttsmp3.com/text-to-speech/Chinese%20Mandarin/"><div class="langbox">Chinese Mandarin</div></a><a href="https://ttsmp3.com/text-to-speech/Danish/"><div class="langbox">Danish</div></a><a href="https://ttsmp3.com/text-to-speech/Dutch/"><div class="langbox">Dutch</div></a><a href="https://ttsmp3.com/text-to-speech/French/"><div class="langbox">French</div></a><a href="https://ttsmp3.com/text-to-speech/German/"><div class="langbox">German</div></a><a href="https://ttsmp3.com/text-to-speech/Icelandic/"><div class="langbox">Icelandic</div></a><a href="https://ttsmp3.com/text-to-speech/Indian%20English/"><div class="langbox">Indian English</div></a><a href="https://ttsmp3.com/text-to-speech/Italian/"><div class="langbox">Italian</div></a><a href="https://ttsmp3.com/text-to-speech/Japanese/"><div class="langbox">Japanese</div></a><a href="https://ttsmp3.com/text-to-speech/Korean/"><div class="langbox">Korean</div></a><a href="https://ttsmp3.com/text-to-speech/Mexican%20Spanish/"><div class="langbox">Mexican Spanish</div></a><a href="https://ttsmp3.com/text-to-speech/New%20Zealand%20English/"><div class="langbox">New Zealand English</div></a><a href="https://ttsmp3.com/text-to-speech/Norwegian/"><div class="langbox">Norwegian</div></a><a href="https://ttsmp3.com/text-to-speech/Polish/"><div class="langbox">Polish</div></a><a href="https://ttsmp3.com/text-to-speech/Portuguese/"><div class="langbox">Portuguese</div></a><a href="https://ttsmp3.com/text-to-speech/Romanian/"><div class="langbox">Romanian</div></a><a href="https://ttsmp3.com/text-to-speech/Russian/"><div class="langbox">Russian</div></a><a href="https://ttsmp3.com/text-to-speech/Swedish/"><div class="langbox">Swedish</div></a><a href="https://ttsmp3.com/text-to-speech/Turkish/"><div class="langbox">Turkish</div></a><a href="https://ttsmp3.com/text-to-speech/US%20English/"><div class="langbox">US English</div></a><a href="https://ttsmp3.com/text-to-speech/US%20Spanish/"><div class="langbox">US Spanish</div></a><a href="https://ttsmp3.com/text-to-speech/Welsh/"><div class="langbox">Welsh</div></a><a href="https://ttsmp3.com/text-to-speech/Welsh%20English/"><div class="langbox">Welsh English</div></a>		</div>
+	
+		<div style="text-align: justify; width: 70%; padding: 30px; border: 2px solid #cecece; padding-top: 10px; margin-top: 15px;">
+			<h3>Are you looking for free speech-to-text conversion?</h3>
+			<p>If you are looking for ways to convert your spoken audio files from US English to written text, check out our partner-website <a target="_blank" href="https://convertspeech.com/">ConvertSpeech.com</a></p>
+			<div style="background: black; width: 240px; padding:0px; margin: 0px; margin-top:5px; margin-left: 15px;"><a target="_blank" href="https://convertspeech.com/"><img style="margin: 0px; padding: 10px;" width="200" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/logow.png"></a></div>
+		</div>
+	
+		<br>
+		<p>Current Limit: ~375 words or 3,000 characters / day | Powered by AWS Polly</p>
+		<p>Get in touch? Mail me: <br><img width="200" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/mail.png"></p>
+		<p>Need to convert more text to speech? <a href="https://ttsmp3.com/register?click=direct">Register here</a> for a 24 hour premium access.</p>
+	</div>
+
+		<div id="footer">
+		<div>
+			<p>© 2021 ttsMP3.com | <a class="botlink" rel="nofollow" href="https://ttsmp3.com/faq">FAQ</a> | <a class="botlink" rel="nofollow" href="https://ttsmp3.com/privacypolicy">Privacy Policy</a> | <a class="botlink" rel="nofollow" href="https://ttsmp3.com/tos">Terms of Service</a> | <a class="botlink" rel="nofollow" href="https://ttsmp3.com/apidoc">API Documentation</a> </p>
+
+		</div>
+	</div>	
+
+
+	
+
+	<script src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/jquery-3.3.1.min.js.download"></script>
+	<script type="text/javascript" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/FileSaver.min.js.download"></script>
+	<link rel="stylesheet" type="text/css" href="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/style.css">
+	<link rel="stylesheet" type="text/css" href="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/mobile.css" media="screen and (max-width : 568px)">
+
+<ins class="adsbygoogle adsbygoogle-noablate" data-adsbygoogle-status="done" style="display: none !important;" data-ad-status="unfilled"><ins id="aswift_2_expand" style="display:inline-table;border:none;height:0px;margin:0;padding:0;position:relative;visibility:visible;width:0px;background-color:transparent;" tabindex="0" title="Advertisement" aria-label="Advertisement"><ins id="aswift_2_anchor" style="display:block;border:none;height:0px;margin:0;padding:0;position:relative;visibility:visible;width:0px;background-color:transparent;"><iframe id="aswift_2" name="aswift_2" style="left:0;position:absolute;top:0;border:0;width:undefinedpx;height:undefinedpx;" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation" frameborder="0" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/ads(6).html" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true" allow="attribution-reporting" data-google-container-id="a!3" data-load-complete="true"></iframe></ins></ins></ins><iframe id="google_osd_static_frame_9791977555472" name="google_osd_static_frame" style="display: none; width: 0px; height: 0px;" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/saved_resource.html"></iframe><iframe src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/aframe.html" width="0" height="0" style="display: none;"></iframe></body><iframe id="google_esf" name="google_esf" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/zrt_lookup.html" style="display: none;"></iframe><ins class="adsbygoogle adsbygoogle-noablate" data-adsbygoogle-status="done" style="display: none !important; width: 100vw !important; height: 100vh !important; inset: 0px auto auto 0px !important; clear: none !important; float: none !important; margin: 0px !important; max-height: none !important; max-width: none !important; opacity: 1 !important; overflow: visible !important; padding: 0px !important; position: fixed !important; vertical-align: baseline !important; visibility: visible !important; z-index: 2147483647 !important; background-color: transparent;" aria-hidden="true" data-ad-status="filled" data-vignette-loaded="true"><ins id="aswift_7_expand" style="display: inline-table !important; border: none !important; height: 100vh !important; margin: 0px !important; padding: 0px !important; position: relative !important; visibility: visible !important; width: 100vw !important; background-color: transparent !important; inset: auto !important; clear: none !important; float: none !important; max-height: none !important; max-width: none !important; opacity: 1 !important; overflow: visible !important; vertical-align: baseline !important; z-index: auto !important;" tabindex="0" title="Advertisement" aria-label="Advertisement"><ins id="aswift_7_anchor" style="display: block !important; border: none !important; height: 100vh !important; margin: 0px !important; padding: 0px !important; position: relative !important; visibility: visible !important; width: 100vw !important; background-color: transparent !important; inset: auto !important; clear: none !important; float: none !important; max-height: none !important; max-width: none !important; opacity: 1 !important; overflow: visible !important; vertical-align: baseline !important; z-index: auto !important;"><iframe id="aswift_7" name="" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation" width="" height="" frameborder="0" src="./Free Text-To-Speech for US English language and MP3 Download _ ttsMP3.com_files/zrt_lookup(1).html" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true" allow="attribution-reporting" style="width: 100vw !important; height: 100vh !important; inset: 0px auto auto 0px !important; position: absolute !important; clear: none !important; display: inline !important; float: none !important; margin: 0px !important; max-height: none !important; max-width: none !important; opacity: 1 !important; overflow: visible !important; padding: 0px !important; vertical-align: baseline !important; visibility: visible !important; z-index: auto !important;" data-google-container-id="a!8" data-google-query-id="CMX054SM3fICFcdCfQod6rgIsw" data-load-complete="true"></iframe></ins></ins></ins></html>
